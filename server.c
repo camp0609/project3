@@ -30,6 +30,8 @@ typedef struct request_queue {
    char *request;
 } request_t;
 
+request_t queue[MAX_queue_len];
+
 typedef struct cache_entry {
     int len;
     char *request;
@@ -93,10 +95,20 @@ void * dispatch(void *arg) {
   while (1) {
 
     // Accept client connection
+    if (int GetFd = accept_connection() < 0) { //Returns fd
+			//exit();	 		
+	 		printf("Error Connection Not Accepted");
+	 }
 
     // Get request from the client
+    char *dispatchbuffer = (char *)malloc(sizeof(char) * 1024);
+    memset(dispatchbuffer, '\0', 1024);
+	 if (int get_request(GetFd, dispatchbuffer) != 0) {
+	 		printf("Unable to Get Request");
+	 }
 
     // Add the request into the queue
+    //queue[] = dispatchbuffer;
 
    }
    return NULL;
@@ -110,10 +122,14 @@ void * worker(void *arg) {
    while (1) {
 
     // Get the request from the queue
+    char *workerbuffer = (char *)malloc(sizeof(char) * 1024);
+    memset(workerbuffer, '\0', 1024);
+    //workerbuffer = queue[];
 
     // Get the data from the disk or the cache (extra credit B)
 
     // Log the request into the file and terminal
+	
 
     // return the result
   }

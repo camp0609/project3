@@ -30,8 +30,6 @@ typedef struct request_queue {
    char *request;
 } request_t;
 
-request_t queue[MAX_queue_len];
-
 typedef struct cache_entry {
     int len;
     char *request;
@@ -95,17 +93,17 @@ void * dispatch(void *arg) {
   while (1) {
 
     // Accept client connection
-    if (int GetFd = accept_connection() < 0) { //Returns fd
+    if (int fd = accept_connection() < 0) { //Returns fd
 			//exit();	 		
 	 		printf("Error Connection Not Accepted");
-	 }
+	  }
 
     // Get request from the client
-    char *dispatchbuffer = (char *)malloc(sizeof(char) * 1024);
-    memset(dispatchbuffer, '\0', 1024);
-	 if (int get_request(GetFd, dispatchbuffer) != 0) {
+    char *dispatchbuffer = (char *)malloc(sizeof(char) * BUFF_SIZE);
+    memset(dispatchbuffer, '\0', BUFF_SIZE);
+	  if (int get_request(fd, dispatchbuffer) != 0) {
 	 		printf("Unable to Get Request");
-	 }
+	  }
 
     // Add the request into the queue
     //queue[] = dispatchbuffer;
@@ -122,14 +120,10 @@ void * worker(void *arg) {
    while (1) {
 
     // Get the request from the queue
-    char *workerbuffer = (char *)malloc(sizeof(char) * 1024);
-    memset(workerbuffer, '\0', 1024);
-    //workerbuffer = queue[];
 
     // Get the data from the disk or the cache (extra credit B)
 
     // Log the request into the file and terminal
-	
 
     // return the result
   }
@@ -159,28 +153,45 @@ int main(int argc, char **argv) {
   int *cacheSize = argv[8];
 
   //char *path[100] = argv[2];
-  
+
   // Perform error checks on the input arguments
 
   // Change SIGINT action for grace termination
 
   // Open log file
   int fd = open("web_server_log.txt", O_WRONLY);
-  if (fd < 0){
-	printf("ERROR: Cannot open the log file \n");
-	exit(0);
-  }
-  
+	if (fd < 0){
+		printf("ERROR: Cannot open the log file \n");
+		exit(0);
+	}
   // Change the current working directory to server root directory
   if (chdir(path) != 0)  
     perror("failed to change to web root directory");
-  
   // Initialize cache (extra credit B)
 
   // Start the server
   init(port);
-	
+
   // Create dispatcher and worker threads (all threads should be detachable)
+  pthread_t w_threads[numWorkers];
+  pthread_t d_threads[numDispatchers];
+
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
+  request_t requestQueue[queLength];
+
+  for(int i = 0; i < numDispatchers; i++){
+    if(pthread_create(&(d_threads[i]), &attr, dispatch, (void*) &requestQueue) != 0) {
+            printf("Dispatcher thread failed to create\n");
+    }
+  }
+
+  for(int i = 0; i < numWorkers; i++){
+    if(pthread_create(&(w_threads[i]), &attr, worker, (void*) &requestQueue) != 0) {
+            printf("Worker thread failed to create\n");
+    }
+  }
 
   // Create dynamic pool manager thread (extra credit A)
 

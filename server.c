@@ -131,15 +131,34 @@ int main(int argc, char **argv) {
   }
 
   // Get the input args
+  int *port = argv[1];
+  int *pathSize = strlen(argv[2])
+  char *path = malloc(pathSize + 1);
+  memset(path, '\0', pathSize + 1);
+  strcpy(path, argv[2]);
+  int *numDispatchers = argv[3];
+  int *numWorkers = argv[4];
+  int *dFlag = argv[6];
+  int *queLength = argv[7];
+  int *cacheSize = argv[8];
 
+  //char *path[100] = argv[2];
+  
   // Perform error checks on the input arguments
 
   // Change SIGINT action for grace termination
 
   // Open log file
-
+  int fd = open("web_server_log.txt", O_WRONLY);
+	if (fd < 0){
+		printf("ERROR: Cannot open the log file \n");
+		exit(0);
+	}
+  
   // Change the current working directory to server root directory
-
+  if (chdir(path) != 0)  
+    perror("failed to change to web root directory");
+  
   // Initialize cache (extra credit B)
 
   // Start the server

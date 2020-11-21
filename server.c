@@ -150,10 +150,10 @@ int main(int argc, char **argv) {
 
   // Open log file
   int fd = open("web_server_log.txt", O_WRONLY);
-	if (fd < 0){
-		printf("ERROR: Cannot open the log file \n");
-		exit(0);
-	}
+  if (fd < 0){
+	printf("ERROR: Cannot open the log file \n");
+	exit(0);
+  }
   
   // Change the current working directory to server root directory
   if (chdir(path) != 0)  

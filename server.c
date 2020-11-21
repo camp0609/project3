@@ -162,7 +162,8 @@ int main(int argc, char **argv) {
   // Initialize cache (extra credit B)
 
   // Start the server
-
+  init(port);
+	
   // Create dispatcher and worker threads (all threads should be detachable)
 
   // Create dynamic pool manager thread (extra credit A)

@@ -166,7 +166,7 @@ void * worker(void *arg) {
       printf("%s", filename);
     // return the result
       char *content_type = getContentType(filename);
-      if(return_result(fd, ))
+      if(return_result(fd, content_type, ))
    }
 
   }

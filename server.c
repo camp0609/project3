@@ -36,6 +36,13 @@ typedef struct cache_entry {
     char *content;
 } cache_entry_t;
 
+//create a thread-queue
+request_t queue[MAX_queue_len];
+int insert_idx = 0;
+int remove_idx = 0;
+
+pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
+
 /* ******************** Dynamic Pool Code  [Extra Credit A] **********************/
 // Extra Credit: This function implements the policy to change the worker thread pool dynamically
 // depending on the number of requests

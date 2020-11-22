@@ -123,14 +123,45 @@ void * dispatch(void *arg) {
 void * worker(void *arg) {
 
    while (1) {
-
+     if(pthread_mutex_lock(&mtx) != 0)
+       printf("lock unsuccessful");
     // Get the request from the queue
+     int fd = queue[remove_idx].fd;
+     char * filename = queue[remove_idx].request;
+     remove_idx ++;
 
+     if(pthread_mutex_unlock(&mtx) != 0)
+       printf("unlock unsuccessful");
     // Get the data from the disk or the cache (extra credit B)
-
+    if (fd < 0) {
+       char * buf = "bad request";
+       int error = return_error(fd, buf);
+       if (error != 0 ){
+         printf("failed to return error")
+       }
+       else
+         exit();
+    }
+    else {
     // Log the request into the file and terminal
+      FILE *f;
+      if(f = fopen("web_server_log.txt", "w") == EOF){
+        printf("error open the file")
+      };
+      if(pthread_mutex_lock(&mtx) != 0)
+        printf("lock unsuccessful");
 
+      fprintf(f, "%s", filename);
+
+      if(pthread_mutex_unlock(&mtx) != 0)
+        printf("unlock unsuccessful");
+
+      printf("%s", filename);
     // return the result
+      char *content_type = getContentType(filename);
+      if(return_result(fd, ))
+   }
+
   }
   return NULL;
 }

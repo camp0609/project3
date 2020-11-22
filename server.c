@@ -101,15 +101,15 @@ void * dispatch(void *arg) {
 
     // Accept client connection
     if (int fd = accept_connection() < 0) { //Returns fd
-			printf("Error Connection Not Accepted");
-      exit();
-	  }
+	printf("Error Connection Not Accepted");
+        exit();
+    }
     char *filename = (char *)malloc(sizeof(char) * BUFF_SIZE);
     memset(filename, '\0', BUFF_SIZE);
     // Get request from the client
     if (get_request(fd, filename) != 0) {
-	 		printf("Unable to Get Request");
-	  }
+	printf("Unable to Get Request");
+    }
     else {
       if(pthread_mutex_lock(&mtx) != 0)
         printf("lock unsuccessful");
@@ -140,7 +140,7 @@ void * worker(void *arg) {
      if(pthread_mutex_unlock(&mtx) != 0)
        printf("unlock unsuccessful");
     // Get the data from the disk or the cache (extra credit B)
-    if (fd < 0) {
+     if (fd < 0) {
        char * buf = "bad request";
        int error = return_error(fd, buf);
        if (error != 0 ){
@@ -148,8 +148,8 @@ void * worker(void *arg) {
        }
        else
          exit();
-    }
-    else {
+     }
+     else {
     // Log the request into the file and terminal
       FILE *f;
       if(f = fopen("web_server_log.txt", "w") == EOF){

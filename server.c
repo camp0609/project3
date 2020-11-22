@@ -94,22 +94,27 @@ void * dispatch(void *arg) {
 
     // Accept client connection
     if (int fd = accept_connection() < 0) { //Returns fd
-			//exit();	 		
-	 		printf("Error Connection Not Accepted");
+			printf("Error Connection Not Accepted");
+      exit();
 	  }
-
+    char *filename = (char *)malloc(sizeof(char) * BUFF_SIZE);
+    memset(filename, '\0', BUFF_SIZE);
     // Get request from the client
-    char *dispatchbuffer = (char *)malloc(sizeof(char) * BUFF_SIZE);
-    memset(dispatchbuffer, '\0', BUFF_SIZE);
-	  if (int get_request(fd, dispatchbuffer) != 0) {
+    if (get_request(fd, filename) != 0) {
 	 		printf("Unable to Get Request");
 	  }
-
-    // Add the request into the queue
-    //queue[] = dispatchbuffer;
-
-   }
-   return NULL;
+    else {
+      if(pthread_mutex_lock(&mtx) != 0)
+        printf("lock unsuccessful");
+      // Add the request into the queue
+      queue[insert_idx].fd = fd;
+      queue[insert_idx].request = filename;
+      insert_idx ++;
+      if(pthread_mutex_unlock(&mtx) != 0)
+        printf("unlock unsuccessful");
+    }
+  }
+  return NULL;
 }
 
 /**********************************************************************************/

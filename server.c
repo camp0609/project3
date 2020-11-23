@@ -41,6 +41,12 @@ request_t queue[MAX_queue_len];
 int insert_idx = 0;
 int remove_idx = 0;
 
+//Graceful termination signals
+static volatile sig_atomic_t doneflag = 0; // accessible by main and signal handler
+static void setdoneflag(int signo) {
+	doneflag = 1;
+}
+
 pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 
 /* ******************** Dynamic Pool Code  [Extra Credit A] **********************/
@@ -200,48 +206,62 @@ int main(int argc, char **argv) {
   // Perform error checks on the input arguments
 
   // Change SIGINT action for grace termination
-
-  // Open log file
-  int fd = open("web_server_log.txt", O_WRONLY);
-	if (fd < 0){
-		printf("ERROR: Cannot open the log file \n");
-		exit(0);
+  //Graceful Termination: Deallocate memory, free mutexs
+  struct sigaction act;
+  	act.sa_handler = setdoneflag; //set up signal handler
+	act.sa_flags = 0;
+	if ((sigemptyset(&act.sa_mask) == -1) || (sigaction(SIGINT, &act, NULL) == -1)) {
+		perror("Failed to set SIGINT handler");
+		return 1;	
 	}
-  // Change the current working directory to server root directory
-  if (chdir(path) != 0)  
-    perror("failed to change to web root directory");
-  // Initialize cache (extra credit B)
+	
+  while (!doneflag) {
+  		// Open log file
+  		int fd = open("web_server_log.txt", O_WRONLY);
+		if (fd < 0){
+			printf("ERROR: Cannot open the log file \n");
+			exit(0);
+		}
+  		// Change the current working directory to server root directory
+  		if (chdir(path) != 0)  
+    		perror("failed to change to web root directory");
+  		
+  		// Initialize cache (extra credit B)
 
-  // Start the server
-  init(port);
+  		// Start the server
+  		init(port);
 
-  // Create dispatcher and worker threads (all threads should be detachable)
-  pthread_t w_threads[numWorkers];
-  pthread_t d_threads[numDispatchers];
+  		// Create dispatcher and worker threads (all threads should be detachable)
+  		pthread_t w_threads[numWorkers];
+  		pthread_t d_threads[numDispatchers];
 
-  pthread_attr_t attr;
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
-  request_t requestQueue[queLength];
+  		pthread_attr_t attr;
+  		pthread_attr_init(&attr);
+  		pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
+  		request_t requestQueue[queLength];
 
-  for(int i = 0; i < numDispatchers; i++){
-    if(pthread_create(&(d_threads[i]), &attr, dispatch, (void*) &requestQueue) != 0) {
+  		for(int i = 0; i < numDispatchers; i++){
+    		if(pthread_create(&(d_threads[i]), &attr, dispatch, (void*) &requestQueue) != 0) {
             printf("Dispatcher thread failed to create\n");
-    }
-  }
+    		}
+  		}
 
-  for(int i = 0; i < numWorkers; i++){
-    if(pthread_create(&(w_threads[i]), &attr, worker, (void*) &requestQueue) != 0) {
+  		for(int i = 0; i < numWorkers; i++){
+    		if(pthread_create(&(w_threads[i]), &attr, worker, (void*) &requestQueue) != 0) {
             printf("Worker thread failed to create\n");
-    }
-  }
+    		}
+  		}
 
-  // Create dynamic pool manager thread (extra credit A)
-
-  // Terminate server gracefully
-    // Print the number of pending requests in the request queue
-    // close log file
-    // Remove cache (extra credit B)
-
-  return 0;
+  		// Create dynamic pool manager thread (extra credit A)
+	}
+	
+   // Terminate server gracefully
+   // Print the number of pending requests in the request queue
+   printf("Program terminating ...\n");    	
+   printf("Pending requests: %d", insert.idx); 
+   // close log file
+   int close(fd);  
+   // Remove cache (extra credit B)
+   
+   return 0;
 }

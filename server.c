@@ -204,6 +204,34 @@ int main(int argc, char **argv) {
   //char *path[100] = argv[2];
 
   // Perform error checks on the input arguments
+	if (port < 1025 || port > 65535) {
+		perror("Invalid port number");
+		exit(0);	
+	}	
+	else if (pathSize <= 0) {
+		perror("Invalid path");
+		exit(0);	
+	}
+	else if (numDispatchers > 100 || numDispatchers <= 0) {
+		perror("Invalid number of dispatchers");
+		exit(0);	
+	}
+	else if (numworkers > 100 || numWorkers <= 0) {
+		perror("Invalid number of workers");
+		exit(0);
+	}
+	else if (dflag != 0) {
+		perror("Dynamic pool size not supported");
+		exit(0);	
+	}
+	else if (queLength > 100 || queLength <= 0) {
+		perror("Invalid queue length");
+		exit(0);	
+	}
+	else if (cacheSize != 0) {
+		perror("Dynamic caching not supported");
+		exit(0);	
+	}
 
   // Change SIGINT action for grace termination
   //Graceful Termination: Deallocate memory, free mutexs

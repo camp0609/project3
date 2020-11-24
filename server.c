@@ -30,6 +30,13 @@ typedef struct request_queue {
    char *request;
 } request_t;
 
+typedef struct condBuffer {
+
+	struct request_t* q;
+	pthread_cond_t* cond;
+	pthread_mutex_t* mutex;
+};
+
 typedef struct cache_entry {
     int len;
     char *request;
@@ -102,7 +109,7 @@ int readFromDisk(/*necessary arguments*/) {
 
 // Function to receive the request from the client and add to the queue
 void * dispatch(void *arg) {
-
+	//need to pass condbuffer into this, will fix in morning
   while (1) {
 
     // Accept client connection
@@ -267,6 +274,13 @@ int main(int argc, char **argv) {
   		pthread_attr_init(&attr);
   		pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
   		request_t requestQueue[queLength];
+	  	struct condBuffer* cq = (struct condBuffer*) malloc(sizeof(struct condBuffer));
+		cq->q = (struct buffer*) malloc(sizeof(struct buffer));
+		cq->q->index=0;
+		cq->cond = (pthread_cond_t*) malloc(sizeof(pthread_cond_t));
+		cq->mutex = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
+		pthread_cond_init(cq->cond, NULL);
+		pthread_mutex_init(cq->mutex, NULL);
 
   		for(int i = 0; i < numDispatchers; i++){
     		if(pthread_create(&(d_threads[i]), &attr, dispatch, (void*) &requestQueue) != 0) {

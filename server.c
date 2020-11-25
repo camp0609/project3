@@ -235,7 +235,7 @@ void * worker(void * f, void *i) {
     if(pthread_mutex_unlock(&mtx) != 0)
       printf("unlock unsuccessful");
 
-    // return the result
+    /*// return the result
     if(fd2 < 0) {
       char *buf = "bad request";
       int error = return_error(fd, buf); //return error for illegal request
@@ -248,7 +248,7 @@ void * worker(void * f, void *i) {
       if(return_result(fd2, content_type, buffer, numbytes) != 0) {
         printf("error return the result");
       }
-    }
+    }*/
 
  }
   return NULL;

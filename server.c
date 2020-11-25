@@ -149,7 +149,7 @@ void * dispatch(void *arg) {
 }
 
 // Function to retrieve the request from the queue, process it and then return a result to the client
-void * worker(void * arg) {
+void * worker(void * f, void *i) {
   int reqCompleted = 0;
   while (1) {
 
@@ -160,7 +160,9 @@ void * worker(void * arg) {
 	  }
     
     // Get the request from the queue
-    struct worker_params* wp = (struct worker_params*) arg;
+    int *fd1 = (int *) f;
+    int *id = (int *) i;
+    int fd = *fd1;
     int fd2 = q[remove_idx].fd;
     char* filename = q[remove_idx].request;
     remove_idx ++;
@@ -169,11 +171,32 @@ void * worker(void * arg) {
     if(pthread_mutex_unlock(&ring_access) != 0)
       printf("unlock unsuccessful");
     
+    // Get the data from the disk or the cache (extra credit B)
+    
     char *buffer = NULL;
     printf("%s \n", filename);
     int numbytes = readFromDisk(filename +1, &buffer);
     if(numbytes == -1) {
       printf("error read");
+    }
+    
+    // return the result
+    char *buf = (char *)malloc(sizeof(char) * BUFF_SIZE);
+    int error;
+    int result;
+    if(fd2 < 0) {
+      buf = "bad request";
+      error = return_error(fd, buf); //return error for illegal request
+      if (error != 0 ){
+        printf("failed to return error");
+      }
+    }
+    else {
+      char *content_type = getContentType(filename);
+      result = return_result(fd2, content_type, buffer, numbytes);
+      if(result != 0) {
+        printf("error return the result");
+      }
     }
 
     // Log the request into the file and terminal
@@ -182,9 +205,26 @@ void * worker(void * arg) {
     reqCompleted++;
     char logInfo[BUFF_SIZE];
     memset(logInfo, '\0', BUFF_SIZE);
-    strcpy(logInfo, "[");
-    //strcat(logInfo, id);
-    int ret = write(wp->file, filename, strlen(filename));
+    strcpy(logInfo, '[');
+    strcat(logInfo, itoa(id));
+    strcat(logInfo, ']');
+    strcat(logInfo, '[');
+    strcat(logInfo, itoa(reqCompleted));
+    strcat(logInfo, ']');
+    strcat(logInfo, '[');
+    strcat(logInfo, fd);
+    strcat(logInfo, ']');
+    strcat(logInfo, '[');
+    strcat(logInfo, filename);
+    strcat(logInfo, ']');
+    strcat(logInfo, '[');
+    if (fd2 < 0)
+      strcat(logInfo, buf);
+    else
+      strcat(logInfo, itoa(result));
+    strcat(logInfo, ']');
+    
+    int ret = write(fd, filename, strlen(filename));
 		if(ret < 0){
 			printf("ERROR: Cannot write to file %s\n", filename);
 			exit(1);
@@ -197,7 +237,7 @@ void * worker(void * arg) {
     // return the result
     if(fd2 < 0) {
       char *buf = "bad request";
-      int error = return_error(wp->file, buf); //return error for illegal request
+      int error = return_error(fd, buf); //return error for illegal request
       if (error != 0 ){
         printf("failed to return error");
       }

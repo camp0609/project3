@@ -265,16 +265,16 @@ int main(int argc, char **argv) {
   }
 
   // Get the input args
-  int port = atoi(argv[1]);
+  int port = strtol(argv[1], NULL, 10);
   int pathSize = strlen(argv[2]);
   char *path = malloc(pathSize + 1);
   memset(path, '\0', pathSize + 1);
   strcpy(path, argv[2]);
-  int numDispatchers = atoi(argv[3]);
-  int numWorkers = atoi(argv[4]);
-  int dFlag = atoi(argv[6]);
-  int queLength = atoi(argv[7]);
-  int cacheSize = atoi(argv[8]);
+  int numDispatchers = strtol(argv[3], NULL, 10);
+  int numWorkers = strtol(argv[4], NULL, 10);
+  int dFlag = strtol(argv[5], NULL, 10);
+  int queLength = strtol(argv[6], NULL, 10);
+  int cacheSize = strtol(argv[7], NULL, 10);
 
   //char *path[100] = argv[2];
 

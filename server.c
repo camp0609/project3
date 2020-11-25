@@ -111,7 +111,7 @@ int readFromDisk(char* filename, char **buffer) {
   return -1; //error
 }
 
-/**********************************************************************************/
+/* ************************************ Important Functions ********************************/
 
 // Function to receive the request from the client and add to the queue
 void * dispatch(void *arg) {
@@ -151,8 +151,6 @@ void * dispatch(void *arg) {
 
   return NULL;
 }
-
-/* ************************************ Important Functions ********************************/
 
 // Function to retrieve the request from the queue, process it and then return a result to the client
 void * worker(void * f, void *i) {

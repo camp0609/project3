@@ -77,23 +77,19 @@ void * dynamic_pool_size_update(void *arg) {
 int getCacheIndex(char *request){
   /// return the index if the request is present in the cache
 }
-
 // Function to add the request and its file content into the cache
 void addIntoCache(char *mybuf, char *memory , int memory_size){
   // It should add the request at an index according to the cache replacement policy
   // Make sure to allocate/free memory when adding or replacing cache entries
 }
-
 // clear the memory allocated to the cache
 void deleteCache(){
   // De-allocate/free the cache memory
 }
-
 // Function to initialize the cache
 void initCache(){
   // Allocating memory and initializing the cache array
 }
-
 */
 
 /**********************************************************************************/
@@ -204,7 +200,7 @@ void * worker(void * f) {
 	  }
     
     // Get the request from the queue
-    int * fd1 = (int *) f;
+    int *fd1 = (int *) f;
     int fd = *fd1;
     int fd2 = q[remove_idx].fd;
     char* filename = q[remove_idx].request;
@@ -238,7 +234,7 @@ void * worker(void * f) {
 
     // return the result
     if(fd2 < 0) {
-      char * buf = "bad request";
+      char *buf = "bad request";
       int error = return_error(fd, buf); //return error for illegal request
       if (error != 0 ){
         printf("failed to return error");
@@ -257,7 +253,7 @@ void * worker(void * f) {
 /**********************************************************************************/
 
 int main(int argc, char **argv) {
-
+  printf("starting");
   // Error check on number of arguments
   if(argc != 8){
     printf("usage: %s port path num_dispatcher num_workers dynamic_flag queue_length cache_size\n", argv[0]);
@@ -345,18 +341,6 @@ int main(int argc, char **argv) {
   		pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
   		//request_t requestQueue[queLength];
 
-	  	/*struct requestBuffer *rq = (struct requestBuffer*) malloc(sizeof(struct requestBuffer));
-      //struct req_buffer_t* rq = (struct req_buffer_t*) malloc(sizeof(queLength));
-		  rq->q = (struct buffer*) malloc(sizeof(struct buffer));
-		  rq->insert_idx = 0;
-      rq->remove_idx = 0;
-      rq->max_size = queLength;
-      rq->buffer_length = 0;
-		  rq->cond = (pthread_cond_t*) malloc(sizeof(pthread_cond_t));
-		  rq->mutex = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
-		  pthread_cond_init(rq->cond, NULL);
-		  pthread_mutex_init(rq->mutex, NULL);
-		*/
 
   		for(int i = 0; i < numDispatchers; i++){
     		if(pthread_create(&(d_threads[i]), &attr, dispatch, NULL) != 0) {
@@ -365,7 +349,7 @@ int main(int argc, char **argv) {
   		}
 
   		for(int i = 0; i < numWorkers; i++){
-    		if(pthread_create(&(w_threads[i]), &attr, worker, (void *)&fd) != 0) {
+    		if(pthread_create(&(w_threads[i]), &attr, worker, (void*)&fd) != 0) {
             printf("Worker thread failed to create\n");
     		}
   		}

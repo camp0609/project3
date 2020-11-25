@@ -99,8 +99,30 @@ void initCache(){
 /* ************************************ Utilities ********************************/
 // Function to get the content type from the request
 char* getContentType(char * mybuf) {
-  // Should return the content type based on the file type in the request
-  // (See Section 5 in Project description for more details)
+   // Should return the content type based on the file type in the request
+   // (See Section 5 in Project description for more details)
+   char *endingbuf;
+   int i = 0;
+   while(mybuf[i] != ".") {
+		i++;   
+   }
+   int j = i;
+	while(mybuf[i] != NULL) {
+		endingbuf[i-j] = mybuf[i];
+		i++;
+	}
+	if(endingbuf == ".html") {
+		return "text/html";	
+	}
+	else if(endingbuf == ".jpg") {
+		return "image/jpeg";	
+	}
+	else if(endingbuf == ".gif") {
+		return "image/gif";	
+	}
+	else {
+		return "text/plain";	
+	}
 }
 
 // Function to open and read the file from the disk into the memory

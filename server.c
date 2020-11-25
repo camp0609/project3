@@ -31,6 +31,11 @@ request_t q[MAX_queue_len];
 int insert_idx = 0;
 int remove_idx = 0;
 
+struct worker_params {
+   int file;
+   int id;
+};
+
 // set up the lock 
 pthread_mutex_t ring_access = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -153,7 +158,7 @@ void * dispatch(void *arg) {
 }
 
 // Function to retrieve the request from the queue, process it and then return a result to the client
-void * worker(void * f, void *i) {
+void * worker(void * arg) {
   int reqCompleted = 0;
   while (1) {
 
@@ -164,9 +169,7 @@ void * worker(void * f, void *i) {
 	  }
     
     // Get the request from the queue
-    int *fd1 = (int *) f;
-    int *id = (int *) i;
-    int fd = *fd1;
+    struct worker_params* wp = (struct worker_params*) arg;
     int fd2 = q[remove_idx].fd;
     char* filename = q[remove_idx].request;
     remove_idx ++;
@@ -188,9 +191,9 @@ void * worker(void * f, void *i) {
     reqCompleted++;
     char logInfo[BUFF_SIZE];
     memset(logInfo, '\0', BUFF_SIZE);
-    strcpy(logInfo, '[');
-    strcat(logInfo, id);
-    int ret = write(fd, filename, strlen(filename));
+    strcpy(logInfo, "[");
+    //strcat(logInfo, id);
+    int ret = write(wp->file, filename, strlen(filename));
 		if(ret < 0){
 			printf("ERROR: Cannot write to file %s\n", filename);
 			exit(1);
@@ -203,7 +206,7 @@ void * worker(void * f, void *i) {
     // return the result
     if(fd2 < 0) {
       char *buf = "bad request";
-      int error = return_error(fd, buf); //return error for illegal request
+      int error = return_error(wp->file, buf); //return error for illegal request
       if (error != 0 ){
         printf("failed to return error");
       }

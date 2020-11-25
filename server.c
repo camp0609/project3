@@ -102,21 +102,21 @@ char* getContentType(char * mybuf) {
    // (See Section 5 in Project description for more details)
    char *endingbuf;
    int i = 0;
-   while(mybuf[i] != ".") {
+   while(mybuf[i] != '.') {
 		i++;   
    }
    int j = i;
-	while(mybuf[i] != NULL) {
+	while(mybuf[i] != '\0') {
 		endingbuf[i-j] = mybuf[i];
 		i++;
 	}
-	if(endingbuf == ".html") {
+	if(strcmp(endingbuf, ".html")) {
 		return "text/html";	
 	}
-	else if(endingbuf == ".jpg") {
+	else if(strcmp(endingbuf, ".jpg")) {
 		return "image/jpeg";	
 	}
-	else if(endingbuf == ".gif") {
+	else if(strcmp(endingbuf, ".gif")) {
 		return "image/gif";	
 	}
 	else {
@@ -126,11 +126,11 @@ char* getContentType(char * mybuf) {
 
 // Function to open and read the file from the disk into the memory
 // Add necessary arguments as needed
-int readFromDisk(char* filename) {
+int readFromDisk(char* filename, char * buffer) {
   int size;
   FILE* f;
 
-  f = fopen(file, "rb"); 
+  f = fopen(filename, "rb"); 
   if(f != NULL){
     if( fseek(f, 0, SEEK_END) ){
       fclose(f);
@@ -156,7 +156,7 @@ void * dispatch(void *arg) {
     int fd = accept_connection();
     if (fd < 0) { //Illegal request
 	      printf("Error Connection Not Accepted");
-        return;
+        exit(1);
     }
     char *filename = (char *)malloc(sizeof(char) * BUFF_SIZE);
     memset(filename, '\0', BUFF_SIZE);
@@ -209,9 +209,10 @@ void * worker(int fd) {
       printf("unlock unsuccessful");
     
     // Get the data from the disk or the cache (extra credit B)
-    int numbytes;
+    
     char * buffer = (char *)malloc(sizeof(char) * BUFF_SIZE);
-    if(numbytes = readFronDisk(filename, buffer) == -1) {
+    int numbytes = readFromDisk(filename, buffer);
+    if(numbytes == -1) {
       printf("error read");
     }
 
@@ -258,8 +259,8 @@ int main(int argc, char **argv) {
   }
 
   // Get the input args
-  int *port = argv[1];
-  int *pathSize = strlen(argv[2])
+  int *port = (int *)argv[1];
+  int pathSize = strlen(argv[2]);
   char *path = malloc(pathSize + 1);
   memset(path, '\0', pathSize + 1);
   strcpy(path, argv[2]);

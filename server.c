@@ -192,8 +192,8 @@ void * dispatch(void *arg) {
 /**********************************************************************************/
 
 // Function to retrieve the request from the queue, process it and then return a result to the client
-void * worker(void * f) {
-
+void * worker(void * f, void *i) {
+  int reqCompleted = 0;
   while (1) {
 
     if(pthread_mutex_lock(&ring_access) != 0)
@@ -204,6 +204,7 @@ void * worker(void * f) {
     
     // Get the request from the queue
     int *fd1 = (int *) f;
+    int *id = (int *) i;
     int fd = *fd1;
     int fd2 = q[remove_idx].fd;
     char* filename = q[remove_idx].request;
@@ -225,7 +226,11 @@ void * worker(void * f) {
     // Log the request into the file and terminal
     if(pthread_mutex_lock(&mtx) != 0)
        printf("lock unsuccessful");
-       
+    reqCompleted++;
+    char logInfo[BUFF_SIZE];
+    memset(logInfo, '\0', BUFF_SIZE);
+    strcpy(logInfo, '[');
+    strcat(logInfo, id);
     int ret = write(fd, filename, strlen(filename));
 		if(ret < 0){
 			printf("ERROR: Cannot write to file %s\n", filename);

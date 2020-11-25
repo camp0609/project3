@@ -231,12 +231,12 @@ void * worker(void *arg) {
     strcat(logInfo, ']');
     strcat(logInfo, '\n');*/
     
-    int ret = write(fd, logInfo, strlen(logInfo));
+    int ret = write(wp->file, logInfo, strlen(logInfo));
 		if(ret < 0){
 			printf("ERROR: Cannot write to file %s\n", filename);
 			exit(1);
     }
-    printf("%s", filename);
+    printf("%s", logInfo);
     
     if(pthread_mutex_unlock(&mtx) != 0)
       printf("unlock unsuccessful");

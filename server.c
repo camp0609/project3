@@ -149,7 +149,7 @@ void * dispatch(void *arg) {
 }
 
 // Function to retrieve the request from the queue, process it and then return a result to the client
-void * worker(void * f, void *i) {
+void * worker(void *arg) {
   int reqCompleted = 0;
   while (1) {
 
@@ -160,9 +160,7 @@ void * worker(void * f, void *i) {
 	  }
     
     // Get the request from the queue
-    int *fd1 = (int *) f;
-    int *id = (int *) i;
-    int fd = *fd1;
+    struct worker_params* wp = (struct worker_params*) arg;
     int fd2 = q[remove_idx].fd;
     char* filename = q[remove_idx].request;
     remove_idx ++;

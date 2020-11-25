@@ -127,8 +127,17 @@ char* getContentType(char * mybuf) {
 
 // Function to open and read the file from the disk into the memory
 // Add necessary arguments as needed
-int readFromDisk(/*necessary arguments*/) {
+int readFromDisk(char* filename) {
     // Open and read the contents of file given the request
+    char buffer[BUFF_SIZE];
+    int fd = open(filename, O_RDONLY);
+		if (fd < 0){
+			printf("ERROR: Cannot read from disk \n");
+			exit(0);
+		}
+	 ssize_t read(fd, buffer, BUFF_SIZE);
+	 int close(fd);
+	 return buffer;
 }
 
 /**********************************************************************************/

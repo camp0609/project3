@@ -184,7 +184,7 @@ void * worker(void *arg) {
     int result;
     if(fd2 < 0) {
       buf = "bad request";
-      error = return_error(fd, buf); //return error for illegal request
+      error = return_error(fd2, buf); //return error for illegal request
       if (error != 0 ){
         printf("failed to return error");
       }
@@ -205,31 +205,13 @@ void * worker(void *arg) {
     char endinfor[BUFF_SIZE];
     memset(logInfo, '\0', BUFF_SIZE);
     memset(endinfor, '\0', BUFF_SIZE);
-    sprintf(logInfo, "[%f][%f][%f][%f]", id, reqCompleted, wp->file, filename);
+    sprintf(logInfo, "[%d][%d][%d][%s]", wp->id, reqCompleted, wp->file, filename);
     if (fd2 < 0)
-      sprintf(endinfo, "[%f]\n", buf);
+      sprintf(endinfor, "[%s]\n", buf);
     else
-      sprintf(endinfo, "[%f]\n", result);
+      sprintf(endinfor, "[%d]\n", result);
     strcat(logInfo, endinfor);  
-    /*strcpy(logInfo, '[');
-    strcat(logInfo, itoa(id));
-    strcat(logInfo, ']');
-    strcat(logInfo, '[');
-    strcat(logInfo, itoa(reqCompleted));
-    strcat(logInfo, ']');
-    strcat(logInfo, '[');
-    strcat(logInfo, fd);
-    strcat(logInfo, ']');
-    strcat(logInfo, '[');
-    strcat(logInfo, filename);
-    strcat(logInfo, ']');
-    strcat(logInfo, '[');
-    if (fd2 < 0)
-      strcat(logInfo, buf);
-    else
-      strcat(logInfo, itoa(result));
-    strcat(logInfo, ']');
-    strcat(logInfo, '\n');*/
+
     
     int ret = write(wp->file, logInfo, strlen(logInfo));
 		if(ret < 0){
@@ -240,21 +222,6 @@ void * worker(void *arg) {
     
     if(pthread_mutex_unlock(&mtx) != 0)
       printf("unlock unsuccessful");
-
-    /*// return the result
-    if(fd2 < 0) {
-      char *buf = "bad request";
-      int error = return_error(fd, buf); //return error for illegal request
-      if (error != 0 ){
-        printf("failed to return error");
-      }
-    }
-    else {
-      char *content_type = getContentType(filename);
-      if(return_result(fd2, content_type, buffer, numbytes) != 0) {
-        printf("error return the result");
-      }
-    }*/
 
  }
   return NULL;

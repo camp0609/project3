@@ -210,7 +210,7 @@ void * worker(void *arg) {
       sprintf(endinfo, "[%f]\n", buf);
     else
       sprintf(endinfo, "[%f]\n", result);
-	  
+    strcat(logInfo, endinfor);  
     /*strcpy(logInfo, '[');
     strcat(logInfo, itoa(id));
     strcat(logInfo, ']');

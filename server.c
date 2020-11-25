@@ -20,10 +20,6 @@
 #define INVALID -1
 #define BUFF_SIZE 1024
 
-/*
-  THE CODE STRUCTURE GIVEN BELOW IS JUST A SUGGESTION. FEEL FREE TO MODIFY AS NEEDED
-*/
-
 // structs:
 typedef struct request_queue {
    int fd;
@@ -49,56 +45,24 @@ typedef struct cache_entry {
     char *content;
 } cache_entry_t;
 
-
-
 //Graceful termination signals
 static volatile sig_atomic_t doneflag = 0; // accessible by main and signal handler
 static void setdoneflag(int signo) {
 	doneflag = 1;
 }
 
-//pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
-
-/* ******************** Dynamic Pool Code  [Extra Credit A] **********************/
-// Extra Credit: This function implements the policy to change the worker thread pool dynamically
-// depending on the number of requests
 void * dynamic_pool_size_update(void *arg) {
   while(1) {
     // Run at regular intervals
     // Increase / decrease dynamically based on your policy
   }
 }
-/**********************************************************************************/
-
-/* ************************ Cache Code [Extra Credit B] **************************/
-
-/*
-// Function to check whether the given request is present in cache
-int getCacheIndex(char *request){
-  /// return the index if the request is present in the cache
-}
-// Function to add the request and its file content into the cache
-void addIntoCache(char *mybuf, char *memory , int memory_size){
-  // It should add the request at an index according to the cache replacement policy
-  // Make sure to allocate/free memory when adding or replacing cache entries
-}
-// clear the memory allocated to the cache
-void deleteCache(){
-  // De-allocate/free the cache memory
-}
-// Function to initialize the cache
-void initCache(){
-  // Allocating memory and initializing the cache array
-}
-*/
-
-/**********************************************************************************/
 
 /* ************************************ Utilities ********************************/
+
 // Function to get the content type from the request
 char* getContentType(char * mybuf) {
-   // Should return the content type based on the file type in the request
-   // (See Section 5 in Project description for more details)
+   // Returns the content type based on the file type in the request
    char *endingbuf = (char *)malloc(sizeof(char) * BUFF_SIZE);
    memset(endingbuf, '\0', BUFF_SIZE);
    int i = 0;
@@ -125,7 +89,6 @@ char* getContentType(char * mybuf) {
 }
 
 // Function to open and read the file from the disk into the memory
-// Add necessary arguments as needed
 int readFromDisk(char* filename, char **buffer) {
   int size;
   FILE* f;
@@ -175,7 +138,7 @@ void * dispatch(void *arg) {
 		  pthread_cond_wait (&some_content, &ring_access);
 	  }
     
-    //insert things
+    //insert request
     q[insert_idx].fd = fd;
     q[insert_idx].request = filename;
     insert_idx ++;
@@ -189,7 +152,7 @@ void * dispatch(void *arg) {
   return NULL;
 }
 
-/**********************************************************************************/
+/* ************************************ Important Functions ********************************/
 
 // Function to retrieve the request from the queue, process it and then return a result to the client
 void * worker(void * f, void *i) {
@@ -213,8 +176,6 @@ void * worker(void * f, void *i) {
     pthread_cond_signal(&some_content);
     if(pthread_mutex_unlock(&ring_access) != 0)
       printf("unlock unsuccessful");
-    
-    // Get the data from the disk or the cache (extra credit B)
     
     char *buffer = NULL;
     printf("%s \n", filename);
@@ -259,7 +220,8 @@ void * worker(void * f, void *i) {
  }
   return NULL;
 }
-/**********************************************************************************/
+
+/* ************************************ Main ********************************/
 
 int main(int argc, char **argv) {
   printf("starting");
@@ -280,8 +242,6 @@ int main(int argc, char **argv) {
   int dFlag = strtol(argv[5], NULL, 10);
   int queLength = strtol(argv[6], NULL, 10);
   int cacheSize = strtol(argv[7], NULL, 10);
-
-  //char *path[100] = argv[2];
 
   // Perform error checks on the input arguments
 	if (port < 1025 || port > 65535) {
@@ -333,8 +293,6 @@ int main(int argc, char **argv) {
   // Change the current working directory to server root directory
   		if (chdir(path) != 0)  
     		perror("failed to change to web root directory");
-  		
-  		// Initialize cache (extra credit B)
 
   		// Start the server
   		init(port);
@@ -345,8 +303,6 @@ int main(int argc, char **argv) {
   		pthread_attr_t attr;
   		pthread_attr_init(&attr);
   		pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
-  		//request_t requestQueue[queLength];
-
 
   		for(int i = 0; i < numDispatchers; i++){
     		if(pthread_create(&(d_threads[i]), &attr, dispatch, NULL) != 0) {
@@ -360,13 +316,9 @@ int main(int argc, char **argv) {
     		}
   		}
 
-  		
+  //Wait for Ctrl-C
   while (!doneflag) {
-
-  		// Create dispatcher and worker threads (all threads should be detachable)
   		sleep(1);
-
-  		// Create dynamic pool manager thread (extra credit A)
 	}
 	
    // Terminate server gracefully
@@ -374,8 +326,7 @@ int main(int argc, char **argv) {
    printf("Program terminating ...\n");    	
    printf("Pending requests: %d", insert_idx); 
    // close log file
-   close(fd);  
-   // Remove cache (extra credit B)
+   close(fd);
    
    return 0;
 }

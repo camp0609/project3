@@ -72,6 +72,7 @@ void * dynamic_pool_size_update(void *arg) {
 
 /* ************************ Cache Code [Extra Credit B] **************************/
 
+/*
 // Function to check whether the given request is present in cache
 int getCacheIndex(char *request){
   /// return the index if the request is present in the cache
@@ -93,6 +94,8 @@ void initCache(){
   // Allocating memory and initializing the cache array
 }
 
+*/
+
 /**********************************************************************************/
 
 /* ************************************ Utilities ********************************/
@@ -100,7 +103,8 @@ void initCache(){
 char* getContentType(char * mybuf) {
    // Should return the content type based on the file type in the request
    // (See Section 5 in Project description for more details)
-   char *endingbuf;
+   char *endingbuf = (char *)malloc(sizeof(char) * BUFF_SIZE);
+   memset(endingbuf, '\0', BUFF_SIZE);
    int i = 0;
    while(mybuf[i] != '.') {
 		i++;   
@@ -189,7 +193,7 @@ void * dispatch(void *arg) {
 /**********************************************************************************/
 
 // Function to retrieve the request from the queue, process it and then return a result to the client
-void * worker(int fd) {
+void * worker(void * f) {
 
   while (1) {
 
@@ -200,6 +204,8 @@ void * worker(int fd) {
 	  }
     
     // Get the request from the queue
+    int * fd1 = (int *) f;
+    int fd = *fd1;
     int fd2 = q[remove_idx].fd;
     char* filename = q[remove_idx].request;
     remove_idx ++;
@@ -259,16 +265,16 @@ int main(int argc, char **argv) {
   }
 
   // Get the input args
-  int *port = (int *)argv[1];
+  int port = atoi(argv[1]);
   int pathSize = strlen(argv[2]);
   char *path = malloc(pathSize + 1);
   memset(path, '\0', pathSize + 1);
   strcpy(path, argv[2]);
-  int *numDispatchers = argv[3];
-  int *numWorkers = argv[4];
-  int *dFlag = argv[6];
-  int *queLength = argv[7];
-  int *cacheSize = argv[8];
+  int numDispatchers = atoi(argv[3]);
+  int numWorkers = atoi(argv[4]);
+  int dFlag = atoi(argv[6]);
+  int queLength = atoi(argv[7]);
+  int cacheSize = atoi(argv[8]);
 
   //char *path[100] = argv[2];
 
@@ -285,11 +291,11 @@ int main(int argc, char **argv) {
 		perror("Invalid number of dispatchers");
 		exit(0);	
 	}
-	else if (numworkers > 100 || numWorkers <= 0) {
+	else if (numWorkers > 100 || numWorkers <= 0) {
 		perror("Invalid number of workers");
 		exit(0);
 	}
-	else if (dflag != 0) {
+	else if (dFlag != 0) {
 		perror("Dynamic pool size not supported");
 		exit(0);	
 	}
@@ -311,15 +317,15 @@ int main(int argc, char **argv) {
 		perror("Failed to set SIGINT handler");
 		return 1;	
 	}
-	
-  while (!doneflag) {
-  		// Open log file
-  	int fd = open("web_server_log.txt", O_WRONLY);
-		if (fd < 0){
+  
+  // Open log file
+  int fd = open("web_server_log.txt", O_WRONLY);
+  if (fd < 0){
 			printf("ERROR: Cannot open the log file \n");
 			exit(0);
 		}
-  		// Change the current working directory to server root directory
+		
+  // Change the current working directory to server root directory
   		if (chdir(path) != 0)  
     		perror("failed to change to web root directory");
   		
@@ -327,6 +333,8 @@ int main(int argc, char **argv) {
 
   		// Start the server
   		init(port);
+  		
+  while (!doneflag) {
 
   		// Create dispatcher and worker threads (all threads should be detachable)
   		pthread_t w_threads[numWorkers];
@@ -337,7 +345,7 @@ int main(int argc, char **argv) {
   		pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
   		//request_t requestQueue[queLength];
 
-	  	struct requestBuffer *rq = (struct requestBuffer*) malloc(sizeof(struct requestBuffer));
+	  	/*struct requestBuffer *rq = (struct requestBuffer*) malloc(sizeof(struct requestBuffer));
       //struct req_buffer_t* rq = (struct req_buffer_t*) malloc(sizeof(queLength));
 		  rq->q = (struct buffer*) malloc(sizeof(struct buffer));
 		  rq->insert_idx = 0;
@@ -348,15 +356,16 @@ int main(int argc, char **argv) {
 		  rq->mutex = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
 		  pthread_cond_init(rq->cond, NULL);
 		  pthread_mutex_init(rq->mutex, NULL);
+		*/
 
   		for(int i = 0; i < numDispatchers; i++){
-    		if(pthread_create(&(d_threads[i]), &attr, dispatch, (void*) &rq) != 0) {
+    		if(pthread_create(&(d_threads[i]), &attr, dispatch, NULL) != 0) {
             printf("Dispatcher thread failed to create\n");
     		}
   		}
 
   		for(int i = 0; i < numWorkers; i++){
-    		if(pthread_create(&(w_threads[i]), &attr, worker, (void*) &requestQueue) != 0) {
+    		if(pthread_create(&(w_threads[i]), &attr, worker, (void *)&fd) != 0) {
             printf("Worker thread failed to create\n");
     		}
   		}
@@ -367,9 +376,9 @@ int main(int argc, char **argv) {
    // Terminate server gracefully
    // Print the number of pending requests in the request queue
    printf("Program terminating ...\n");    	
-   printf("Pending requests: %d", insert.idx); 
+   printf("Pending requests: %d", insert_idx); 
    // close log file
-   int close(fd);  
+   close(fd);  
    // Remove cache (extra credit B)
    
    return 0;

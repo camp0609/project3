@@ -56,13 +56,6 @@ static void setdoneflag(int signo) {
 	doneflag = 1;
 }
 
-void * dynamic_pool_size_update(void *arg) {
-  while(1) {
-    // Run at regular intervals
-    // Increase / decrease dynamically based on your policy
-  }
-}
-
 /* ************************************ Utilities ********************************/
 
 // Function to get the content type from the request
@@ -120,9 +113,7 @@ int readFromDisk(char* filename, char **buffer) {
 
 // Function to receive the request from the client and add to the queue
 void * dispatch(void *arg) {
-
   while (1) {
-
     // Accept client connection
     int fd = accept_connection();
     if (fd < 0) { //Illegal request

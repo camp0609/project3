@@ -319,7 +319,7 @@ int main(int argc, char **argv) {
 	}
   
   // Open log file
-  int fd = open("web_server_log.txt", O_WRONLY);
+  int fd = open("web_server_log.txt", O_CREAT | O_WRONLY, 0777);
   if (fd < 0){
 			printf("ERROR: Cannot open the log file \n");
 			exit(0);

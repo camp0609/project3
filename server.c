@@ -49,10 +49,7 @@ typedef struct cache_entry {
     char *content;
 } cache_entry_t;
 
-//create a thread-queue
-request_t queue[MAX_queue_len];
-int insert_idx = 0;
-int remove_idx = 0;
+
 
 //Graceful termination signals
 static volatile sig_atomic_t doneflag = 0; // accessible by main and signal handler

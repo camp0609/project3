@@ -126,7 +126,7 @@ char* getContentType(char * mybuf) {
 
 // Function to open and read the file from the disk into the memory
 // Add necessary arguments as needed
-int readFromDisk(char* filename, char * buffer) {
+int readFromDisk(char* filename, char **buffer) {
   int size;
   FILE* f;
 
@@ -138,6 +138,9 @@ int readFromDisk(char* filename, char * buffer) {
     }
 
     size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    *buffer = (char *)malloc(sizeof(char) * size);
+    fread(*buffer, size, size, f);
     fclose(f);
     return size;
   }
@@ -212,8 +215,9 @@ void * worker(void * f) {
     
     // Get the data from the disk or the cache (extra credit B)
     
-    char * buffer = (char *)malloc(sizeof(char) * BUFF_SIZE);
-    int numbytes = readFromDisk(filename, buffer);
+    char *buffer = NULL;
+    printf("%s \n", filename);
+    int numbytes = readFromDisk(filename +1, &buffer);
     if(numbytes == -1) {
       printf("error read");
     }

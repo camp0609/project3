@@ -39,7 +39,7 @@ typedef struct requestBuffer {
   int remove_idx;
   int buffer_length;
   int max_size;
-} req_buffer_t;
+};
 
 typedef struct cache_entry {
     int len;
@@ -145,21 +145,21 @@ int readFromDisk(char* filename) {
 // Function to receive the request from the client and add to the queue
 void * dispatch(void *arg) {
 
-	struct req_buffer_t* rq = (struct req_buffer_t*) arg;
+	struct requestBuffer* rq = (struct requestBuffer*) arg;
 
   while (1) {
-
+    int fd = accept_connection();
     // Accept client connection
-    if (int fd = accept_connection() < 0) { //Returns fd
+    if (fd < 0) { //Returns fd
 	      printf("Error Connection Not Accepted");
-        exit();
+        exit(0);
     }
     char *filename = (char *)malloc(sizeof(char) * BUFF_SIZE);
     memset(filename, '\0', BUFF_SIZE);
     // Get request from the client
     if (get_request(fd, filename) != 0) {
 	    printf("Unable to Get Request");
-      exit();
+      exit(0);
     }
 
 	  pthread_mutex_lock(rq->mutex);
@@ -170,9 +170,9 @@ void * dispatch(void *arg) {
     rq->q[rq->insert_idx].request = filename;
     rq->insert_idx++;
     if(rq->insert_idx == rq->max_size){
-      req->insert_idx = 0;
+      rq->insert_idx = 0;
     }
-    rq->bufferLength++;
+    rq->buffer_length++;
     pthread_cond_signal(rq->cond);
     pthread_mutex_unlock(rq->mutex);
     // else {
@@ -194,7 +194,7 @@ void * dispatch(void *arg) {
 // Function to retrieve the request from the queue, process it and then return a result to the client
 void * worker(void *arg) {
 
-  struct req_buffer_t* rq = (struct req_buffer_t*) arg;
+  struct requestBuffer* rq = (struct requestBuffer*) arg;
 
   while (1) {
     if(pthread_mutex_lock(rq->mutex) != 0)
@@ -207,18 +207,18 @@ void * worker(void *arg) {
     rq->buffer_length--;
     rq->remove_idx++;
     if(rq->remove_idx == rq->max_size){
-      req->remove_idx = 0;
+      rq->remove_idx = 0;
     }
     pthread_cond_signal(rq->cond);
     if(pthread_mutex_lock(rq->mutex) != 0)
       printf("lock unsuccessful");
     // Get the request from the queue
-    int fd = queue[remove_idx].fd;
-    char * filename = queue[remove_idx].request;
-    remove_idx ++;
-int ret = write(fd, filename, strlen(filename));
+    //int fd = queue[remove_idx].fd;
+    //char* filename = queue[remove_idx].request;
+    //remove_idx ++;
+    int ret = write(fd, filename, strlen(filename));
 		if(ret < 0){
-			printf("ERROR: Cannot write to file %s\n", wordFileName);
+			printf("ERROR: Cannot write to file %s\n", filename);
 			exit(0);
 		}
     printf("%s", filename);
@@ -347,28 +347,28 @@ int main(int argc, char **argv) {
   		pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
   		//request_t requestQueue[queLength];
 
-	  	//struct req_buffer_t* rq = (struct req_buffer_t*) malloc(sizeof(struct req_buffer_t));
-      		struct req_buffer_t* rq = (struct req_buffer_t*) malloc(sizeof(queLength));
-		rq->q = (struct buffer*) malloc(sizeof(struct buffer));
-		rq->insert_idx = 0;
-      		rq->remove_idx = 0;
-      		rq->max_size = queLength;
-      		rq->buffer_length = 0;
-		rq->cond = (pthread_cond_t*) malloc(sizeof(pthread_cond_t));
-		rq->mutex = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
-		pthread_cond_init(rq->cond, NULL);
-		pthread_mutex_init(rq->mutex, NULL);
+	  	struct requestBuffer *rq = (struct requestBuffer*) malloc(sizeof(struct requestBuffer));
+      //struct req_buffer_t* rq = (struct req_buffer_t*) malloc(sizeof(queLength));
+		  rq->q = (struct buffer*) malloc(sizeof(struct buffer));
+		  rq->insert_idx = 0;
+      rq->remove_idx = 0;
+      rq->max_size = queLength;
+      rq->buffer_length = 0;
+		  rq->cond = (pthread_cond_t*) malloc(sizeof(pthread_cond_t));
+		  rq->mutex = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
+		  pthread_cond_init(rq->cond, NULL);
+		  pthread_mutex_init(rq->mutex, NULL);
 
   		for(int i = 0; i < numDispatchers; i++){
-    		  if(pthread_create(&(d_threads[i]), &attr, dispatch, (void*) &rq) != 0) {
-            	    printf("Dispatcher thread failed to create\n");
-    		  }
+    		if(pthread_create(&(d_threads[i]), &attr, dispatch, (void*) &rq) != 0) {
+            printf("Dispatcher thread failed to create\n");
+    		}
   		}
 
   		for(int i = 0; i < numWorkers; i++){
-    		  if(pthread_create(&(w_threads[i]), &attr, worker, (void*) &requestQueue) != 0) {
-                    printf("Worker thread failed to create\n");
-    		  }
+    		if(pthread_create(&(w_threads[i]), &attr, worker, (void*) &requestQueue) != 0) {
+            printf("Worker thread failed to create\n");
+    		}
   		}
 
   		// Create dynamic pool manager thread (extra credit A)

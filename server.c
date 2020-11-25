@@ -30,16 +30,18 @@ typedef struct request_queue {
    char *request;
 } request_t;
 
-typedef struct requestBuffer {
+// set up the request queue
+request_t q[MAX_queue_len];
+int insert_idx = 0;
+int remove_idx = 0;
 
-	request_t* q;
-	pthread_cond_t* cond;
-	pthread_mutex_t* mutex;
-  int insert_idx;
-  int remove_idx;
-  int buffer_length;
-  int max_size;
-};
+// set up the lock 
+pthread_mutex_t ring_access = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
+
+// set up the condition variables
+pthread_cond_t some_content = PTHREAD_COND_INITIALIZER;
+pthread_cond_t free_slot = PTHREAD_COND_INITIALIZER;
 
 typedef struct cache_entry {
     int len;

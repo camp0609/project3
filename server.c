@@ -202,8 +202,16 @@ void * worker(void *arg) {
        printf("lock unsuccessful");
     reqCompleted++;
     char logInfo[BUFF_SIZE];
+    char endinfor[BUFF_SIZE];
     memset(logInfo, '\0', BUFF_SIZE);
-    strcpy(logInfo, '[');
+    memset(endinfor, '\0', BUFF_SIZE);
+    sprintf(logInfo, "[%f][%f][%f][%f]", id, reqCompleted, wp->file, filename);
+    if (fd2 < 0)
+      sprintf(endinfo, "[%f]\n", buf);
+    else
+      sprintf(endinfo, "[%f]\n", result);
+	  
+    /*strcpy(logInfo, '[');
     strcat(logInfo, itoa(id));
     strcat(logInfo, ']');
     strcat(logInfo, '[');
@@ -221,7 +229,7 @@ void * worker(void *arg) {
     else
       strcat(logInfo, itoa(result));
     strcat(logInfo, ']');
-    strcat(logInfo, '\n');
+    strcat(logInfo, '\n');*/
     
     int ret = write(fd, logInfo, strlen(logInfo));
 		if(ret < 0){

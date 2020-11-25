@@ -223,8 +223,9 @@ void * worker(void * f, void *i) {
     else
       strcat(logInfo, itoa(result));
     strcat(logInfo, ']');
+    strcat(logInfo, '\n');
     
-    int ret = write(fd, filename, strlen(filename));
+    int ret = write(fd, logInfo, strlen(logInfo));
 		if(ret < 0){
 			printf("ERROR: Cannot write to file %s\n", filename);
 			exit(1);

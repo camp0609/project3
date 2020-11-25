@@ -151,119 +151,103 @@ int readFromDisk(char* filename) {
 // Function to receive the request from the client and add to the queue
 void * dispatch(void *arg) {
 
-	struct requestBuffer* rq = (struct requestBuffer*) arg;
-
   while (1) {
-    int fd = accept_connection();
+
     // Accept client connection
-    if (fd < 0) { //Returns fd
+    int fd = accept_connection();
+    if (fd < 0) { //Illegal request
 	      printf("Error Connection Not Accepted");
-        exit(0);
+        return;
     }
     char *filename = (char *)malloc(sizeof(char) * BUFF_SIZE);
     memset(filename, '\0', BUFF_SIZE);
     // Get request from the client
     if (get_request(fd, filename) != 0) {
 	    printf("Unable to Get Request");
-      exit(0);
+      exit(1);
     }
-
-	  pthread_mutex_lock(rq->mutex);
-	  while(rq->buffer_length == rq->max_size){
-		  pthread_cond_wait (rq->cond,rq->mutex);
+    if(pthread_mutex_lock(&ring_access) != 0)
+      printf("lock unsuccessful");
+	  
+	  while(insert_idx == MAX_queue_len - 1){
+		  pthread_cond_wait (&some_content, &ring_access);
 	  }
-    rq->q[rq->insert_idx].fd = fd;
-    rq->q[rq->insert_idx].request = filename;
-    rq->insert_idx++;
-    if(rq->insert_idx == rq->max_size){
-      rq->insert_idx = 0;
-    }
-    rq->buffer_length++;
-    pthread_cond_signal(rq->cond);
-    pthread_mutex_unlock(rq->mutex);
-    // else {
-    //   if(pthread_mutex_lock(&mtx) != 0)
-    //     printf("lock unsuccessful");
-    //   // Add the request into the queue
-    //   queue[insert_idx].fd = fd;
-    //   queue[insert_idx].request = filename;
-    //   insert_idx ++;
-    //   if(pthread_mutex_unlock(&mtx) != 0)
-    //     printf("unlock unsuccessful");
-    // }
+    
+    //insert things
+    q[insert_idx].fd = fd;
+    q[insert_idx].request = filename;
+    insert_idx ++;
+    
+    pthread_cond_signal(&free_slot);
+    if(pthread_mutex_unlock(&ring_access) != 0)
+      printf("unlock unsuccessful");
+    
   }
+
   return NULL;
 }
 
 /**********************************************************************************/
 
 // Function to retrieve the request from the queue, process it and then return a result to the client
-void * worker(void *arg) {
-
-  struct requestBuffer* rq = (struct requestBuffer*) arg;
+void * worker(int fd) {
 
   while (1) {
-    if(pthread_mutex_lock(rq->mutex) != 0)
+
+    if(pthread_mutex_lock(&ring_access) != 0)
       printf("lock unsuccessful");
-	  while(rq->buffer_length == 0){
-		  pthread_cond_wait (rq->cond,rq->mutex);
+	  while(insert_idx == remove_idx){
+		  pthread_cond_wait (&free_slot, &ring_access);
 	  }
-    int fd = rq->q[rq->remove_idx].fd;
-    char* filename = rq->q[rq->remove_idx].request;
-    rq->buffer_length--;
-    rq->remove_idx++;
-    if(rq->remove_idx == rq->max_size){
-      rq->remove_idx = 0;
-    }
-    pthread_cond_signal(rq->cond);
-    if(pthread_mutex_lock(rq->mutex) != 0)
-      printf("lock unsuccessful");
+    
     // Get the request from the queue
-    //int fd = queue[remove_idx].fd;
-    //char* filename = queue[remove_idx].request;
-    //remove_idx ++;
+    int fd2 = q[remove_idx].fd;
+    char* filename = q[remove_idx].request;
+    remove_idx ++;
+    
+    pthread_cond_signal(&some_content);
+    if(pthread_mutex_unlock(&ring_access) != 0)
+      printf("unlock unsuccessful");
+    
+    // Get the data from the disk or the cache (extra credit B)
+    int numbytes;
+    char * buffer = (char *)malloc(sizeof(char) * BUFF_SIZE);
+    if(numbytes = readFronDisk(filename, buffer) == -1) {
+      printf("error read");
+    }
+
+    // Log the request into the file and terminal
+    if(pthread_mutex_lock(&mtx) != 0)
+       printf("lock unsuccessful");
+       
     int ret = write(fd, filename, strlen(filename));
 		if(ret < 0){
 			printf("ERROR: Cannot write to file %s\n", filename);
-			exit(0);
-		}
+			exit(1);
+    }
     printf("%s", filename);
+    
     if(pthread_mutex_unlock(&mtx) != 0)
       printf("unlock unsuccessful");
-    // Get the data from the disk or the cache (extra credit B)
-    // if (fd < 0) {
-    //   char * buf = "bad request";
-    //   int error = return_error(fd, buf);
-    //   if (error != 0 ){
-    //     printf("failed to return error")
-    //   }
-    //   else
-    //     exit();
-    //  }
-    //  else {
-    // // Log the request into the file and terminal
-    //   FILE *f;
-    //   if(f = fopen("web_server_log.txt", "w") == EOF){
-    //     printf("error open the file")
-    //   };
-    //   if(pthread_mutex_lock(&mtx) != 0)
-    //     printf("lock unsuccessful");
 
-    //   fprintf(f, "%s", filename);
+    // return the result
+    if(fd2 < 0) {
+      char * buf = "bad request";
+      int error = return_error(fd, buf); //return error for illegal request
+      if (error != 0 ){
+        printf("failed to return error");
+      }
+    }
+    else {
+      char *content_type = getContentType(filename);
+      if(return_result(fd2, content_type, buffer, numbytes) != 0) {
+        printf("error return the result");
+      }
+    }
 
-    //   if(pthread_mutex_unlock(&mtx) != 0)
-    //     printf("unlock unsuccessful");
-
-    //   printf("%s", filename);
-    // // return the result
-    //   char *content_type = getContentType(filename);
-    //   if(return_result(fd, content_type, ))
-    // }
-
-  }
+ }
   return NULL;
 }
-
 /**********************************************************************************/
 
 int main(int argc, char **argv) {

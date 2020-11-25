@@ -329,11 +329,8 @@ int main(int argc, char **argv) {
 
   		// Start the server
   		init(port);
-  		
-  while (!doneflag) {
 
-  		// Create dispatcher and worker threads (all threads should be detachable)
-  		pthread_t w_threads[numWorkers];
+      pthread_t w_threads[numWorkers];
   		pthread_t d_threads[numDispatchers];
 
   		pthread_attr_t attr;
@@ -353,6 +350,12 @@ int main(int argc, char **argv) {
             printf("Worker thread failed to create\n");
     		}
   		}
+
+  		
+  while (!doneflag) {
+
+  		// Create dispatcher and worker threads (all threads should be detachable)
+  		sleep(1);
 
   		// Create dynamic pool manager thread (extra credit A)
 	}
